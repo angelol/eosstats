@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <script>
+        function connect() {
+          var retry_interval = 3000;
+          var timeout_ref;
+          var connection = new WebSocket('ws://127.0.0.1:9090/live')
+          
+          
+          connection.onopen = function() {
+            console.log("onopen")
+          }
+          connection.onerror = function(error) {
+            console.log('WebSocket error: ' + error)
+            clearTimeout(timeout_ref)
+            timeout_ref = setTimeout(connect, retry_interval)
+          }
+          connection.onmessage = function(e) {
+            var data = JSON.parse(e.data)
+            console.log(data)
+            document.getElementById("aps").innerHTML = data.aps
+            document.getElementById("tps").innerHTML = data.tps
+
+          }
+          connection.onclose = function() {
+            console.log("onclose")
+            clearTimeout(timeout_ref)
+            timeout_ref = setTimeout(connect, retry_interval)
+          }
+          
+        }
+        // connect()
+        
+        
+        
+        
+        
+      </script>
+    </head>
+    
+    <body>
+      EOS Transactions per second: <span id="tps"></span> <br />
+      EOS Actions per second: <span id="aps"></span>
+    </body>
+    
+</html>  
