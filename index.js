@@ -1,5 +1,6 @@
 import MongoClient from 'mongodb'
 import Promise from 'bluebird'
+global.Promise = Promise
 import WebSocket from 'ws'
 import http from 'http'
 import url from 'url'
@@ -10,26 +11,42 @@ const chainId = 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e90
 
 const eos = Eos({httpEndpoint, chainId})
 
+const mongoUrl = 'mongodb://127.0.0.1:27017'
+const dbName = 'EOS'
+const seconds = 1000
+
+const sample_frequency = seconds
+const sample_multiplier = seconds/sample_frequency
+
 // const server = http.createServer()
 // server.listen(9090);
 // 
 // const wss_live = new WebSocket.Server({server: server, path: '/live' });
 // // const wss_stream = new WebSocket.Server({server: server, path: '/stream' });
 
-const wss_live = new WebSocket.Server({ noServer: true });
-const wss_stream = new WebSocket.Server({ noServer: true });
+
+// define some normal http functions
 const server = http.createServer((req, res) => {
-  const q = url.parse(req.url, true)
+  const pathname = url.parse(req.url).pathname;
   
-  if(q.pathname == '/utilization') {
+  if(pathname == '/utilization') {
     return utilization_action(req, res)
+  } else if (pathname == '/ops') {
+    return ops_action(req, res)
+  } else if (pathname == '/max_ops') {
+    return max_ops_action(req, res)
+  } else {
+    res.end()
   }
 })
 
-server.listen(9090)
+server.listen(9090, "127.0.0.1")
 
+// define some websocket functions
+const wss_live = new WebSocket.Server({ noServer: true });
+const wss_stream = new WebSocket.Server({ noServer: true });
 server.on('upgrade', (request, socket, head) => {
-  const pathname = url.parse(request.url).pathname;
+  const pathname = url.parse(request.url).pathname
 
   if (pathname === '/live') {
     wss_live.handleUpgrade(request, socket, head, (ws) => {
@@ -45,12 +62,7 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 
-const mongoUrl = 'mongodb://127.0.0.1:27017'
-const dbName = 'EOS'
-const seconds = 1000
 
-const sample_frequency = seconds
-const sample_multiplier = seconds/sample_frequency
 
 function getMongoConnection(url) {
   return MongoClient.connect(url, { 
@@ -127,7 +139,11 @@ function notify(fun) {
   })
 }
 
+var global_aps, global_tps
+
 notify(([aps, tps]) => {
+  global_aps = aps
+  global_tps = tps
   // console.log("Notify aps: ", aps)
   // console.log("Notify tps: ", tps)
   broadcast(wss_live, JSON.stringify({
@@ -186,13 +202,13 @@ function stream() {
     // console.log("Start: ", start)
     get_actions_stream(start)
     .then(items => {
-      if(!items.length) return;
-      
-      console.log(items.map(x => format_action(x)))
-      broadcast(wss_stream, JSON.stringify(items))
-      const latest = items[items.length-1].receipt.global_sequence
-      // console.log("Latest: ", latest)
-      last_known_sequence = latest
+      if(items.length) {
+        console.log(items.map(x => format_action(x)))
+        broadcast(wss_stream, JSON.stringify(items))
+        const latest = items[items.length-1].receipt.global_sequence
+        // console.log("Latest: ", latest)
+        last_known_sequence = latest
+      }
       setTimeout(stream, 100)
     })
   })
@@ -213,14 +229,18 @@ function utilization() {
       const cpu_usage = sum(x.transactions.map(x => x.cpu_usage_us))
       // console.log(cpu_usage)
       const usage = cpu_usage/info.block_cpu_limit
-      console.log("Usage: ", usage)
+      // console.log("Usage: ", usage)
       if(usage <= 1) {
         add(utilization_list, usage, 300)
         mean_usage = mean(utilization_list)
-        console.log("Mean Usage: ", mean_usage)
+        // console.log("Mean Usage: ", mean_usage)
       }
       setTimeout(utilization, 1000)
     })
+  }).timeout(3000, "Timeout")
+  .catch(e => {
+    console.log(e)
+    setTimeout(utilization, 3000)
   })
 }
 
@@ -228,5 +248,21 @@ utilization()
 
 function utilization_action(req, res) {
   res.write( String((mean_usage*100).toFixed(1)) + "%")
+  res.end()
+}
+
+
+function ops_action(req, res) {
+  get_actions()
+  .then(count => {
+    res.write( String(count) )
+    res.end()
+  })
+}
+
+
+function max_ops_action(req, res) {
+  const max_ops = global_aps/mean_usage
+  res.write( String(max_ops) )
   res.end()
 }
