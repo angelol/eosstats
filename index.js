@@ -36,6 +36,8 @@ const server = http.createServer((req, res) => {
   } else if (pathname == '/max_ops') {
     return max_ops_action(req, res)
   } else {
+    res.writeHead(404, {"Content-Type": "text/plain"})
+    res.write("404 Not Found\n")
     res.end()
   }
 })
@@ -127,8 +129,8 @@ function notify(fun) {
     const current_tps = (transactions-last_transactions)*sample_multiplier
     // console.log("current_aps: ", current_aps)
     // console.log("current_tps: ", current_tps)
-    add(queue_aps, current_aps)
-    add(queue_tps, current_tps)
+    add(queue_aps, current_aps, 5)
+    add(queue_tps, current_tps, 5)
     const mean_aps = mean(queue_aps)
     const mean_tps = mean(queue_tps)
     // console.log("mean_aps: ", mean_aps)
@@ -247,6 +249,7 @@ function utilization() {
 utilization()
 
 function utilization_action(req, res) {
+  res.writeHead(200, {"Content-Type": "text/plain"})
   res.write( String((mean_usage*100).toFixed(1)) + "%")
   res.end()
 }
@@ -255,6 +258,7 @@ function utilization_action(req, res) {
 function ops_action(req, res) {
   get_actions()
   .then(count => {
+    res.writeHead(200, {"Content-Type": "text/plain"})
     res.write( String(count) )
     res.end()
   })
@@ -263,6 +267,7 @@ function ops_action(req, res) {
 
 function max_ops_action(req, res) {
   const max_ops = global_aps/mean_usage
+  res.writeHead(200, {"Content-Type": "text/plain"})
   res.write( String(max_ops) )
   res.end()
 }
