@@ -5,7 +5,7 @@
         function connect() {
           var retry_interval = 3000;
           var timeout_ref;
-          var connection = new WebSocket('ws://127.0.0.1:9090/live')
+          var connection = new WebSocket('wss://stats.priveos.io/live')
           
           
           connection.onopen = function() {
@@ -30,7 +30,7 @@
           }
           
         }
-        // connect()
+        connect()
         
         
         
