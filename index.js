@@ -27,18 +27,13 @@ const server = http.createServer((req, res) => {
 server.listen(9090, "127.0.0.1")
 
 // define some websocket functions
-const wss_live = new WebSocket.Server({ noServer: true });
-const wss_stream = new WebSocket.Server({ noServer: true });
+const wss = new WebSocket.Server({ noServer: true });
 server.on('upgrade', (request, socket, head) => {
   const pathname = url.parse(request.url).pathname
 
   if (pathname === '/live') {
-    wss_live.handleUpgrade(request, socket, head, (ws) => {
-      wss_live.emit('connection', ws);
-    });
-  } else if (pathname === '/stream') {
-    wss_stream.handleUpgrade(request, socket, head, (ws) => {
-      wss_stream.emit('connection', ws);
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws);
     });
   } else {
     socket.destroy();
@@ -65,7 +60,7 @@ async function notify(fun) {
 }
 
 notify(([aps, tps]) => {
-  broadcast(wss_live, JSON.stringify({aps, tps}))
+  broadcast(wss, JSON.stringify({aps, tps}))
 })
 
 function broadcast(socket, data) {
