@@ -126,7 +126,7 @@ var mean_usage
 async function get_utilization() {
   const block_cpu_limit = 200000
   const blocks = await get_latest_blocks(600, {cpu_usage_us: 1, _id: 0})
-  const usage = blocks.map(x => x.cpu_usage_us)
+  const usage = blocks.map(x => x.cpu_usage_us/block_cpu_limit)
   return mean(usage)
 }
 
