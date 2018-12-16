@@ -51,16 +51,58 @@ async function get_latest_block(projection={}) {
   return res[0]
 }
 
+async function get_max_aps_block() {
+  const db = await mongo.db()
+  const res = await db.collection('s').find().sort({actions: -1}).limit(1).toArray()
+  return res[0]
+}
+
+async function get_max_tps_block() {
+  const db = await mongo.db()
+  const res = await db.collection('s').find().sort({transactions: -1}).limit(1).toArray()
+  return res[0]
+}
+
 async function notify(fun) {
   const block_info = await get_latest_block()
-  const aps = block_info.actions * 2
-  const tps = block_info.transactions * 2
-  fun([aps, tps])
+  const current_aps = block_info.actions * 2
+  const current_tps = block_info.transactions * 2
+  const current_tps_block = block_info.block_num
+  const current_aps_block = block_info.block_num
+  const max_aps_block_info = await get_max_aps_block()
+  const max_tps_block_info = await get_max_tps_block()
+  const max_tps_block = max_tps_block_info.block_num
+  const max_aps_block = max_aps_block_info.block_num
+  const max_aps = max_tps_block_info.actions * 2
+  const max_tps = max_tps_block_info.transactions * 2
+  /*
+  Max TPS:
+  Max TPS Block:
+
+  Max APS: 
+  Mas APS Block:
+
+  Current TPS:
+  Current TPS Block:
+
+  Current APS: 
+  Current APS Block:
+  */
+  fun({
+    max_tps,
+    max_tps_block,
+    max_aps,
+    max_aps_block,
+    current_tps,
+    current_tps_block,
+    current_aps,
+    current_aps_block,  
+  })
   setTimeout(notify, 500, fun);  
 }
 
-notify(([aps, tps]) => {
-  broadcast(wss, JSON.stringify({aps, tps}))
+notify(data => {
+  broadcast(wss, JSON.stringify(data))
 })
 
 function broadcast(socket, data) {
@@ -99,8 +141,9 @@ async function utilization_action(req, res) {
 async function ops_action(req, res) {
   const db = await mongo.db()
   const x = await db.collection('g').findOne()
+  const actions = x.actions - 332964188 // adjust zero point to be compatible with mongodb plugin (with blocktwitter disabled etc.)
   res.writeHead(200, {"Content-Type": "text/plain"})
-  res.write( String(x.actions) )
+  res.write( String(actions) )
   res.end()
 }
 
