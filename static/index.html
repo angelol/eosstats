@@ -19,8 +19,15 @@
           connection.onmessage = function(e) {
             var data = JSON.parse(e.data)
             console.log(data)
-            document.getElementById("aps").innerHTML = data.aps
-            document.getElementById("tps").innerHTML = data.tps
+            document.getElementById("aps").innerHTML = data.current_aps
+            document.getElementById("tps").innerHTML = data.current_tps
+            document.getElementById("current_block").innerHTML = data.current_tps_block
+            document.getElementById("max_tps").innerHTML = data.max_tps
+            document.getElementById("max_aps").innerHTML = data.max_aps
+            document.getElementById("max_tps_block").innerHTML = data.max_tps_block
+            document.getElementById("max_aps_block").innerHTML = data.max_aps_block
+
+
 
           }
           connection.onclose = function() {
@@ -40,8 +47,12 @@
     </head>
     
     <body>
+      Current Block: <span id="current_block"></span><br />
       EOS Transactions per second: <span id="tps"></span> <br />
-      EOS Actions per second: <span id="aps"></span>
+      EOS Actions per second: <span id="aps"></span><br />
+      EOS Max TPS: <span id="max_tps"></span> in Block <span id="max_tps_block"></span><br />
+      EOS Max APS: <span id="max_aps"></span> in Block <span id="max_aps_block"></span><br />
+      
     </body>
     
 </html>  

@@ -73,7 +73,7 @@ async function notify(fun) {
   const max_tps_block_info = await get_max_tps_block()
   const max_tps_block = max_tps_block_info.block_num
   const max_aps_block = max_aps_block_info.block_num
-  const max_aps = max_tps_block_info.actions * 2
+  const max_aps = max_aps_block_info.actions * 2
   const max_tps = max_tps_block_info.transactions * 2
   /*
   Max TPS:
