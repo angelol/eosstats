@@ -53,13 +53,13 @@ async function get_latest_block(projection={}) {
 
 async function get_max_aps_block() {
   const db = await mongo.db()
-  const res = await db.collection('s').find().sort({actions: -1}).limit(1).toArray()
+  const res = await db.collection('s').find().sort({actions: -1, block_num: 1}).limit(1).toArray()
   return res[0]
 }
 
 async function get_max_tps_block() {
   const db = await mongo.db()
-  const res = await db.collection('s').find().sort({transactions: -1}).limit(1).toArray()
+  const res = await db.collection('s').find().sort({transactions: -1, block_num: 1}).limit(1).toArray()
   return res[0]
 }
 
