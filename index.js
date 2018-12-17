@@ -98,12 +98,14 @@ async function notify(fun) {
     current_aps,
     current_aps_block,  
   })
-  setTimeout(notify, 500, fun);  
 }
 
-notify(data => {
-  broadcast(wss, JSON.stringify(data))
-})
+setInterval(() => {
+  notify(data => {
+    broadcast(wss, JSON.stringify(data))
+  })
+}, 500)
+
 
 function broadcast(socket, data) {
   socket.clients.forEach(client => {
