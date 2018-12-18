@@ -2,7 +2,7 @@ import WebSocket from 'ws'
 import http from 'http'
 import url from 'url'
 import Mongo from './mongo'
-
+import Promise from 'bluebird'
 const mongoUrl = 'mongodb://127.0.0.1:27017'
 const dbName = 'eosstats'
 const seconds = 1000
@@ -63,12 +63,11 @@ async function get_max_tps_block() {
   return res[0]
 }
 
-async function notify(fun) {
+async function get_stream_data() {
   const block_info = await get_latest_block()
   const current_aps = block_info.actions * 2
   const current_tps = block_info.transactions * 2
-  const current_tps_block = block_info.block_num
-  const current_aps_block = block_info.block_num
+  const current_block = block_info.block_num
   const max_aps_block_info = await get_max_aps_block()
   const max_tps_block_info = await get_max_tps_block()
   const max_tps_block = max_tps_block_info.block_num
@@ -88,24 +87,30 @@ async function notify(fun) {
   Current APS: 
   Current APS Block:
   */
-  fun({
+  return {
+    current_block,
     max_tps,
     max_tps_block,
     max_aps,
     max_aps_block,
     current_tps,
-    current_tps_block,
     current_aps,
-    current_aps_block,  
-  })
+  }
 }
 
-setInterval(() => {
-  notify(data => {
-    broadcast(wss, JSON.stringify(data))
-  })
-}, 500)
-
+async function livestream() {
+  let last_block
+  while(true) {
+    const data = await get_stream_data()
+    console.log("data.current_block: ", data.current_block)
+    if(data.current_block != last_block) {
+      last_block = data.current_block
+      broadcast(wss, JSON.stringify(data))
+    }
+    await Promise.delay(100)    
+  }
+}
+livestream()
 
 function broadcast(socket, data) {
   socket.clients.forEach(client => {
