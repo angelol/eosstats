@@ -102,7 +102,6 @@ async function livestream() {
   let last_block
   while(true) {
     const data = await get_stream_data()
-    console.log("data.current_block: ", data.current_block)
     if(data.current_block != last_block) {
       last_block = data.current_block
       broadcast(wss, JSON.stringify(data))
