@@ -6,6 +6,7 @@ import Promise from 'bluebird'
 const mongoUrl = 'mongodb://127.0.0.1:27017'
 const dbName = 'eosstats'
 const seconds = 1000
+const block_cpu_limit = 200000
 
 const mongo = new Mongo(mongoUrl, dbName)
 
@@ -74,6 +75,7 @@ async function get_stream_data() {
   const max_aps_block = max_aps_block_info.block_num
   const max_aps = max_aps_block_info.actions * 2
   const max_tps = max_tps_block_info.transactions * 2
+  const usage = block_info.cpu_usage_us/block_cpu_limit
   /*
   Max TPS:
   Max TPS Block:
@@ -95,6 +97,7 @@ async function get_stream_data() {
     max_aps_block,
     current_tps,
     current_aps,
+    usage,
   }
 }
 
@@ -130,7 +133,6 @@ function mean(list) {
 var utilization_list =[]
 var mean_usage
 async function get_utilization() {
-  const block_cpu_limit = 200000
   const blocks = await get_latest_blocks(600, {cpu_usage_us: 1, _id: 0})
   const usage = blocks.map(x => x.cpu_usage_us/block_cpu_limit)
   return mean(usage)
