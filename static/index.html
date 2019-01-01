@@ -26,6 +26,7 @@
             document.getElementById("max_aps").innerHTML = data.max_aps
             document.getElementById("max_tps_block").innerHTML = data.max_tps_block
             document.getElementById("max_aps_block").innerHTML = data.max_aps_block
+            document.getElementById("usage").innerHTML = (data.usage*100).toFixed(0)
 
 
 
@@ -52,6 +53,7 @@
       EOS Actions per second: <span id="aps"></span><br />
       EOS Max TPS: <span id="max_tps"></span> in Block <span id="max_tps_block"></span><br />
       EOS Max APS: <span id="max_aps"></span> in Block <span id="max_aps_block"></span><br />
+      Usage: <span id="usage"></span>%
       
     </body>
     
