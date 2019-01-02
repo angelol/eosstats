@@ -1,4 +1,4 @@
-import Eos from 'eosjs-api'
+const Eos = require('eosjs-api')
 
 var httpEndpoint;
 if(process.argv[2]) {
